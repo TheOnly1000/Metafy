@@ -1,0 +1,32 @@
+END-USER LICENSE AGREEMENT
+
+IMPORTANT — READ CAREFULLY: This End-User License Agreement ("EULA") is a legal agreement between you (either an individual or a single entity) and the developer ("Licensor") for the MetaX software product ("Software").
+
+BY INSTALLING, COPYING, OR OTHERWISE USING THE SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS OF THIS EULA. IF YOU DO NOT AGREE, DO NOT INSTALL OR USE THE SOFTWARE.
+
+1. LICENSE GRANT
+   Licensor grants you a non-exclusive, non-transferable, limited license to install and use the Software on any number of computers solely for your internal business or personal use.
+
+2. RESTRICTIONS
+   You may not:
+   a) Reverse engineer, decompile, or disassemble the Software.
+   b) Rent, lease, lend, sell, distribute, or sublicense the Software.
+   c) Remove or alter any copyright notices or proprietary markings.
+   d) Use the Software for any unlawful purpose.
+
+3. INTELLECTUAL PROPERTY
+   The Software is protected by copyright laws and international treaties. Licensor retains all rights, title, and interest in and to the Software, including all intellectual property rights.
+
+4. DISCLAIMER OF WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS," WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH YOU.
+
+5. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY SPECIAL, INCIDENTAL, INDIRECT, OR CONSEQUENTIAL DAMAGES WHATSOEVER ARISING OUT OF OR IN ANY WAY RELATED TO THE USE OF OR INABILITY TO USE THE SOFTWARE, EVEN IF LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+6. TERMINATION
+   This EULA is effective until terminated. Your rights under this EULA will terminate automatically without notice if you fail to comply with any of its terms. Upon termination, you must destroy all copies of the Software.
+
+7. GOVERNING LAW
+   This EULA shall be governed by the laws of the jurisdiction in which the Licensor resides.
+
+© 2026 Aryan for Amagi's Creative Team. All rights reserved.

@@ -1,0 +1,3 @@
+# MetaX V4 — CHANGELOG.md
+
+- 2026-08-09 [V4 created from V3; package.json, main.js, config.json, renderer/index.html, renderer/app.js, renderer/style.css, splash.html, splash.js, tutorial.js, .gitignore] Initial V4: version 4.0.0, GitHub-release updater (TheOnly1000/MetaFy), MinIO local mode (s3_type + s3_endpoint), from-scratch embedded Python bootstrap (userData/pykeep), tutorial smoothing (no backdrop-filter, rAF re-measure, glow only animation).

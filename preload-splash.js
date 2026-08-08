@@ -1,0 +1,8 @@
+const { contextBridge, ipcRenderer } = require("electron");
+
+contextBridge.exposeInMainWorld("splashAPI", {
+  onProgress: (callback) => {
+    ipcRenderer.on("splash-progress", (_event, data) => callback(data));
+  },
+  closeSplash: () => ipcRenderer.send("splash-close"),
+});

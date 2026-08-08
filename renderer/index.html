@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>MetaX</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Header ── -->
+    <header id="header">
+      <div id="titlebar">
+        <div id="view-menu-wrap">
+          <span class="logo" id="logo-btn" tabindex="0" role="button">MetaX</span>
+          <div id="view-menu" class="hidden">
+            <div class="menu-item" data-action="toggle-theme">
+              <span class="menu-icon">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+                  <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
+                  <circle cx="8" cy="8" r="3"/>
+                </svg>
+              </span>
+              <span>Toggle Theme</span>
+              <span class="menu-shortcut">Ctrl+T</span>
+            </div>
+            <div class="menu-item" data-action="toggle-queue">
+              <span class="menu-icon">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+                  <rect x="2" y="2.5" width="12" height="3" rx=".5"/>
+                  <rect x="2" y="7" width="12" height="3" rx=".5"/>
+                  <rect x="2" y="11.5" width="12" height="3" rx=".5"/>
+                </svg>
+              </span>
+              <span>Queue Panel</span>
+              <span class="menu-shortcut">Ctrl+Shift+Q</span>
+            </div>
+            <div class="menu-item" data-action="toggle-statusbar">
+              <span class="menu-icon">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+                  <rect x="1.5" y="2.5" width="13" height="11" rx="1"/>
+                  <path d="M1.5 7h13"/>
+                </svg>
+              </span>
+              <span>Status Bar</span>
+              <span class="menu-shortcut"></span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" data-action="fullscreen">
+              <span class="menu-icon">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+                  <path d="M2 5V2h3M14 5V2h-3M2 11v3h3M14 11v3h-3"/>
+                </svg>
+              </span>
+              <span>Full Screen</span>
+              <span class="menu-shortcut">F11</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" data-action="export-all">
+              <span class="menu-icon">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+                  <path d="M8 1v8m0 0L5 6.5M8 9l3-2.5"/>
+                  <path d="M2 10v3a1 1 0 001 1h10a1 1 0 001-1v-3"/>
+                </svg>
+              </span>
+              <span>Export All Tabs</span>
+              <span class="menu-shortcut">Ctrl+Shift+E</span>
+            </div>
+            <div class="menu-item" data-action="settings">
+              <span class="menu-icon">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" width="14" height="14">
+                  <circle cx="8" cy="8" r="2.5"/>
+                  <path d="M6.5 1.5h3l.4 2.1a5.5 5.5 0 011.7 1l2-.7 1.5 2.6-1.6 1.4a5.5 5.5 0 010 2.2l1.6 1.4-1.5 2.6-2-.7a5.5 5.5 0 01-1.7 1l-.4 2.1h-3l-.4-2.1a5.5 5.5 0 01-1.7-1l-2 .7-1.5-2.6 1.6-1.4a5.5 5.5 0 010-2.2L3.2 5.5l1.5-2.6 2 .7a5.5 5.5 0 011.7-1z"/>
+                </svg>
+              </span>
+              <span>Settings</span>
+              <span class="menu-shortcut">Ctrl+,</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" data-action="tutorial">
+              <span class="menu-icon">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+                  <path d="M8 2.5l5 1.5v4.5c0 2.8-2.2 4.5-5 5-2.8-.5-5-2.2-5-5V4L8 2.5z" stroke-linejoin="round"/>
+                  <path d="M8 6v3" stroke-linecap="round"/>
+                  <circle cx="8" cy="11" r=".5" fill="currentColor"/>
+                </svg>
+              </span>
+              <span>Interactive Tutorial</span>
+              <span class="menu-shortcut">Ctrl+Shift+T</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" data-action="about">
+              <span>About MetaX</span>
+            </div>
+          </div>
+        </div>
+        <span class="badge">v3</span>
+        <span id="titlebar-spacer"></span>
+        <button id="tutorial-btn" title="Interactive Tutorial (Ctrl+Shift+T)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+            <path d="M8 2.5l5 1.5v4.5c0 2.8-2.2 4.5-5 5-2.8-.5-5-2.2-5-5V4L8 2.5z" stroke-linejoin="round"/>
+            <path d="M8 6v3" stroke-linecap="round"/>
+            <circle cx="8" cy="11" r=".5" fill="currentColor"/>
+          </svg>
+        </button>
+        <button id="queue-btn" title="Queue Manager (Ctrl+Shift+Q)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+            <rect x="2" y="2.5" width="12" height="3" rx=".5"/>
+            <rect x="2" y="7" width="12" height="3" rx=".5"/>
+            <rect x="2" y="11.5" width="12" height="3" rx=".5"/>
+          </svg>
+        </button>
+        <button id="edit-mode-btn" title="Toggle Edit Mode (Ctrl+E)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+            <path d="M11.5 2.5l2 2L5 13H3v-2l8.5-8.5z" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button id="shortcuts-btn" title="Keyboard Shortcuts (Ctrl+/)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+            <circle cx="8" cy="8" r="6"/>
+            <path d="M6.5 6.5a1.5 1.5 0 113 0c0 .8-.5 1.2-1 1.5-.5.3-1 .7-1 1.5v.5"/>
+            <circle cx="8" cy="12.5" r=".5" fill="currentColor"/>
+          </svg>
+        </button>
+        <button id="settings-btn" title="Settings (Ctrl+,)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" width="14" height="14">
+            <circle cx="8" cy="8" r="2.5"/>
+            <path d="M6.5 1.5h3l.4 2.1a5.5 5.5 0 011.7 1l2-.7 1.5 2.6-1.6 1.4a5.5 5.5 0 010 2.2l1.6 1.4-1.5 2.6-2-.7a5.5 5.5 0 01-1.7 1l-.4 2.1h-3l-.4-2.1a5.5 5.5 0 01-1.7-1l-2 .7-1.5-2.6 1.6-1.4a5.5 5.5 0 010-2.2L3.2 5.5l1.5-2.6 2 .7a5.5 5.5 0 011.7-1z"/>
+          </svg>
+        </button>
+        <button id="theme-btn" title="Toggle Theme (Ctrl+T)">
+          <svg id="theme-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+            <circle cx="8" cy="8" r="3"/>
+            <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
+          </svg>
+        </button>
+        <button id="update-btn" title="Check for updates">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+            <path d="M8 1v7m0 0L5 5.5M8 8l3-2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 10.5V13a1 1 0 001 1h10a1 1 0 001-1v-2.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div id="toolbar">
+        <div id="date-picker-wrap">
+          <div id="date-display" tabindex="0">
+            <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2.5" y="4.5" width="15" height="13" rx="1.5" />
+              <path d="M2.5 8.5h15" />
+              <path d="M6.5 2.5v3" />
+              <path d="M13.5 2.5v3" />
+            </svg>
+            <span id="date-text"></span>
+            <svg class="chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 5l3 3 3-3" />
+            </svg>
+          </div>
+          <div id="date-calendar" class="hidden">
+            <div id="cal-header">
+              <button id="cal-prev">&lsaquo;</button>
+              <span id="cal-month-year"></span>
+              <button id="cal-next">&rsaquo;</button>
+            </div>
+            <div id="cal-weekdays">
+              <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+            <div id="cal-days"></div>
+            <div id="date-presets">
+              <button class="date-preset-btn" data-preset="today">Today</button>
+              <button class="date-preset-btn" data-preset="yesterday">Yesterday</button>
+              <button class="date-preset-btn" data-preset="-7">Last 7</button>
+              <button class="date-preset-btn" data-preset="-30">Last 30</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="config-controls">
+          <div class="config-item">
+            <label>Extra Segs</label>
+            <div class="number-control">
+              <button class="num-btn" data-target="extra">−</button>
+              <input type="number" id="extra-segments" value="4" min="0" max="30" />
+              <button class="num-btn" data-target="extra">+</button>
+            </div>
+          </div>
+          <div class="config-item">
+            <label>Sub Segs</label>
+            <div class="number-control">
+              <button class="num-btn" data-target="sub">−</button>
+              <input type="number" id="sub-segments" value="2" min="1" max="10" />
+              <button class="num-btn" data-target="sub">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="dir-picker">
+          <button id="browse-btn">
+            <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M2.5 15.5V5a2 2 0 012-2h3.586a1 1 0 01.707.293l1.414 1.414a1 1 0 00.707.293H15.5a2 2 0 012 2v8.5a2 2 0 01-2 2h-11a2 2 0 01-2-2z" />
+            </svg>
+            Output Folder
+          </button>
+          <span id="dir-path"></span>
+        </div>
+
+        <button id="run-btn" disabled>
+          <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.5 3.5v13l10-6.5-10-6.5z" />
+          </svg>
+          <span>Generate</span>
+        </button>
+        <button id="open-out-btn" class="hidden" title="Open output folder in Explorer">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+            <path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V6a1 1 0 00-1-1H9L6 2z"/>
+          </svg>
+          <span>Open Folder</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Body ── -->
+    <div id="body">
+      <aside id="log-panel">
+        <div id="log-header">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14">
+            <path d="M2 3h12v1.5H2V3zm0 4h12v1.5H2V7zm0 4h8v1.5H2V11z" />
+          </svg>
+          <span>Process Log</span>
+          <div id="log-filter">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="running">Active</button>
+            <button class="filter-btn" data-filter="completed">Done</button>
+            <button class="filter-btn" data-filter="errored">Errors</button>
+          </div>
+        </div>
+        <div id="log-output"></div>
+      </aside>
+
+      <div id="viewer">
+        <div id="tab-bar" class="hidden">
+          <div id="tab-list"></div>
+        </div>
+
+        <div id="search-bar" class="hidden">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+            <circle cx="7" cy="7" r="5" />
+            <path d="M11 11l3 3" />
+          </svg>
+          <input type="text" id="search-input" placeholder="Search table... (Ctrl+F)" spellcheck="false" />
+          <span id="search-count"></span>
+        </div>
+
+        <div id="empty-state">
+          <div id="empty-illustration">
+            <div class="cube" style="--i:0"></div>
+            <div class="cube" style="--i:1"></div>
+            <div class="cube" style="--i:2"></div>
+          </div>
+          <p>Select a date and output folder, then click Generate</p>
+          <span class="shortcut-hint">Ctrl+Enter to run</span>
+        </div>
+
+        <div id="table-wrap" class="hidden">
+          <div id="skeleton-overlay" class="hidden">
+            <div class="shimmer-row"><div class="shimmer-cell"></div><div class="shimmer-cell"></div><div class="shimmer-cell"></div><div class="shimmer-cell"></div></div>
+            <div class="shimmer-row"><div class="shimmer-cell"></div><div class="shimmer-cell"></div><div class="shimmer-cell"></div><div class="shimmer-cell"></div></div>
+            <div class="shimmer-row"><div class="shimmer-cell"></div><div class="shimmer-cell"></div><div class="shimmer-cell"></div><div class="shimmer-cell"></div></div>
+            <div class="shimmer-row"><div class="shimmer-cell"></div><div class="shimmer-cell"></div><div class="shimmer-cell"></div><div class="shimmer-cell"></div></div>
+            <div class="shimmer-row"><div class="shimmer-cell"></div><div class="shimmer-cell"></div><div class="shimmer-cell"></div><div class="shimmer-cell"></div></div>
+          </div>
+          <div id="table-scroll">
+            <table id="results-table">
+              <thead><tr id="results-head"></tr></thead>
+              <tbody id="results-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="waiting-state" class="hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32">
+            <circle cx="12" cy="12" r="10" stroke-dasharray="30 70" stroke-linecap="round" />
+          </svg>
+          <span>Processing next asset...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Queue Panel (slide-up) ── -->
+    <div id="queue-panel" class="hidden">
+      <div id="queue-header">
+        <span id="queue-title">Queue Manager</span>
+        <label id="queue-auto-label" title="Auto-run at midnight for today's date">
+          <input type="checkbox" id="queue-auto" />
+          <span>Auto (12 AM)</span>
+        </label>
+        <span id="queue-count">0 dates</span>
+        <button id="queue-close">&times;</button>
+      </div>
+      <div id="queue-body">
+        <div id="queue-add-wrap">
+          <input type="date" id="queue-date-input" />
+          <button id="queue-add-btn">Add Date</button>
+          <button id="queue-run-btn" disabled>Run Queue</button>
+        </div>
+        <div id="queue-list"></div>
+      </div>
+      <div id="queue-progress" class="hidden">
+        <div id="queue-progress-fill"></div>
+        <span id="queue-progress-text"></span>
+      </div>
+    </div>
+
+    <!-- ── Status bar ── -->
+    <footer id="statusbar">
+      <span id="status-brand-left">Internal Purposes Only</span>
+      <span id="status-icon" class="idle"></span>
+      <span id="status-text">Ready</span>
+      <span id="queue-status" class="hidden"></span>
+      <span id="progress-info" class="hidden"></span>
+      <span id="asset-progress" class="hidden"></span>
+      <span id="status-brand-right">Made with Passion By Aryan For Amagi's Creative Team</span>
+    </footer>
+  </div>
+
+  <!-- ── Edit mode ripple overlay ── -->
+  <div id="edit-ripple"></div>
+
+  <!-- ── Edit mode header ── -->
+  <div id="edit-banner" class="hidden">
+    <span id="edit-banner-title">EDIT MODE</span>
+    <span id="edit-banner-hint">Click any cell to edit &middot; Ctrl+Shift+A to apply-to-column</span>
+    <button id="edit-save-cell-btn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+        <path d="M3 8l3 3 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Save Cell
+    </button>
+    <button id="edit-save-col-btn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+        <path d="M2 4h12M2 8h12M2 12h12" stroke-linecap="round"/>
+        <path d="M12 2l2 2-2 2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Save Column
+    </button>
+    <button id="edit-exit-btn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+        <path d="M5 11l6-6M11 11L5 5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ── Hover preview ── -->
+  <div id="hover-preview" class="hidden"></div>
+
+  <!-- ── Toast container ── -->
+  <div id="toast-container"></div>
+
+  <!-- ── Update modal ── -->
+  <div id="update-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content" id="update-content">
+      <div class="modal-header">
+        <span id="update-modal-title">Update Center</span>
+        <button id="update-modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="update-body">
+        <div id="update-status">
+          <div id="update-spinner" class="hidden">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+              <circle cx="10" cy="10" r="8" stroke-dasharray="30 70" stroke-linecap="round" />
+            </svg>
+            <span>Checking for updates...</span>
+          </div>
+          <div id="update-result"></div>
+        </div>
+        <div id="update-download-area" class="hidden">
+          <div id="update-dl-progress">
+            <div id="update-dl-fill"></div>
+          </div>
+          <span id="update-dl-text">Downloading...</span>
+        </div>
+        <div id="update-features" class="hidden">
+          <div class="update-section-title">What's New</div>
+          <ul id="update-features-list"></ul>
+        </div>
+      </div>
+      <div class="modal-footer" id="update-footer" style="display:none;padding:12px 20px;border-top:1px solid var(--border);gap:8px;justify-content:flex-end">
+        <button id="update-dl-btn" class="update-action-btn primary">Download Update</button>
+        <button id="update-install-btn" class="update-action-btn primary hidden">Install &amp; Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Settings modal ── -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content" id="settings-content">
+      <div class="modal-header">
+        <span id="settings-modal-title">Settings</span>
+        <button id="settings-modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="settings-body">
+        <div class="settings-section">
+          <div class="settings-section-title">S3 / MinIO Auto-Upload</div>
+          <p class="settings-desc">When enabled, generated CSV files are automatically uploaded to your bucket after each successful generation. Pick Amazon S3 or a local MinIO server.</p>
+          <label class="settings-toggle">
+            <input type="checkbox" id="s3-enabled" />
+            <span class="toggle-track"><span class="toggle-knob"></span></span>
+            <span class="toggle-label">Auto-push to bucket</span>
+          </label>
+          <div id="s3-fields" class="settings-fields hidden">
+            <div class="settings-field">
+              <label for="s3-type">Storage Type</label>
+              <select id="s3-type">
+                <option value="aws">Amazon S3</option>
+                <option value="minio">MinIO (Local)</option>
+              </select>
+            </div>
+            <div class="settings-field" id="s3-endpoint-field">
+              <label for="s3-endpoint">MinIO Endpoint</label>
+              <input type="text" id="s3-endpoint" placeholder="http://localhost:9000" spellcheck="false" />
+            </div>
+            <div class="settings-field" id="s3-region-field">
+              <label for="s3-region">Region</label>
+              <input type="text" id="s3-region" placeholder="us-east-1" spellcheck="false" />
+            </div>
+            <div class="settings-field">
+              <label for="s3-bucket">Bucket Name</label>
+              <input type="text" id="s3-bucket" placeholder="my-csv-bucket" spellcheck="false" />
+            </div>
+            <div class="settings-field">
+              <label for="s3-prefix">Path inside bucket (optional)</label>
+              <input type="text" id="s3-prefix" placeholder="metax/output/" spellcheck="false" />
+            </div>
+            <div class="settings-field">
+              <label for="s3-access-key">Access Key ID <span class="secret-badge">encrypted</span></label>
+              <input type="text" id="s3-access-key" placeholder="AKIA..." spellcheck="false" autocomplete="off" />
+            </div>
+            <div class="settings-field">
+              <label for="s3-secret-key">Secret Access Key <span class="secret-badge">encrypted</span></label>
+              <input type="password" id="s3-secret-key" placeholder="••••••••" spellcheck="false" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">Completion Sound</div>
+          <p class="settings-desc">Choose a jingle to play when CSV generation finishes.</p>
+          <div class="jingle-row">
+            <select id="jingle-select">
+              <option value="default">Default Beep</option>
+              <option value="ascending">Ascending Scale</option>
+              <option value="descending">Descending Tone</option>
+              <option value="chord">Major Chord</option>
+              <option value="fanfare">Fanfare</option>
+              <option value="none">Silent (no sound)</option>
+            </select>
+            <button id="jingle-play-btn" title="Preview this sound">
+              <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14">
+                <path d="M4 3v10l8-5-8-5z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">Accent Color</div>
+          <p class="settings-desc">Choose your preferred accent color for the UI.</p>
+          <div class="color-swatches">
+            <button class="color-swatch" data-color="purple" style="--swatch:#7c6af0" title="Purple"></button>
+            <button class="color-swatch" data-color="blue" style="--swatch:#3b82f6" title="Blue"></button>
+            <button class="color-swatch" data-color="green" style="--swatch:#22c55e" title="Green"></button>
+            <button class="color-swatch" data-color="orange" style="--swatch:#f97316" title="Orange"></button>
+            <button class="color-swatch" data-color="red" style="--swatch:#ef4444" title="Red"></button>
+            <button class="color-swatch" data-color="pink" style="--swatch:#ec4899" title="Pink"></button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">Iteration Sound</div>
+          <p class="settings-desc">Play a ticking sound for each character as it types into the table cells.</p>
+          <label class="settings-toggle">
+            <input type="checkbox" id="typing-sound-toggle" />
+            <span class="toggle-track"><span class="toggle-knob"></span></span>
+            <span class="toggle-label">Enable typing tick</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer" id="settings-footer">
+        <button id="settings-cancel-btn" class="settings-btn">Cancel</button>
+        <button id="settings-save-btn" class="settings-btn primary">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Quick-Reference Overlay ── -->
+  <div id="shortcuts-overlay" class="hidden">
+    <div class="modal-backdrop"></div>
+    <div id="shortcuts-content">
+      <h2>Keyboard Shortcuts</h2>
+      <div class="shortcut-group">
+        <div class="shortcut-group-title">General</div>
+        <div class="shortcut-row"><span class="key-label">Run Generation</span><span class="key-combo">Ctrl+Enter</span></div>
+        <div class="shortcut-row"><span class="key-label">Toggle Theme</span><span class="key-combo">Ctrl+T</span></div>
+        <div class="shortcut-row"><span class="key-label">Toggle Queue</span><span class="key-combo">Ctrl+Shift+Q</span></div>
+        <div class="shortcut-row"><span class="key-label">Toggle Edit Mode</span><span class="key-combo">Ctrl+E</span></div>
+        <div class="shortcut-row"><span class="key-label">Apply to Column</span><span class="key-combo">Ctrl+Shift+A</span></div>
+        <div class="shortcut-row"><span class="key-label">Full Screen</span><span class="key-combo">F11</span></div>
+        <div class="shortcut-row"><span class="key-label">Shortcuts</span><span class="key-combo">Ctrl+/</span></div>
+        <div class="shortcut-row"><span class="key-label">Settings</span><span class="key-combo">Ctrl+,</span></div>
+        <div class="shortcut-row"><span class="key-label">Interactive Tutorial</span><span class="key-combo">Ctrl+Shift+T</span></div>
+        <div class="shortcut-row"><span class="key-label">Toggle S3 Auto-Push</span><span class="key-combo">(in Settings)</span></div>
+      </div>
+      <div class="shortcut-group">
+        <div class="shortcut-group-title">Tabs</div>
+        <div class="shortcut-row"><span class="key-label">Search Table</span><span class="key-combo">Ctrl+F</span></div>
+        <div class="shortcut-row"><span class="key-label">Close Tab</span><span class="key-combo">Ctrl+W</span></div>
+        <div class="shortcut-row"><span class="key-label">Next Tab</span><span class="key-combo">Ctrl+Tab</span></div>
+        <div class="shortcut-row"><span class="key-label">Previous Tab</span><span class="key-combo">Ctrl+Shift+Tab</span></div>
+        <div class="shortcut-row"><span class="key-label">Export All Tabs</span><span class="key-combo">Ctrl+Shift+E</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Detail modal ── -->
+  <div id="detail-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="modal-title">Detail</span>
+        <button id="modal-copy" title="Copy to clipboard">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+            <rect x="3" y="5" width="10" height="10" rx="1" />
+            <path d="M5 5V3a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1h-2" />
+          </svg>
+          Copy
+        </button>
+        <button id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <pre id="modal-body-text"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script src="modules/keyboard.js"></script>
+  <script src="modules/toast.js"></script>
+  <script src="modules/theme.js"></script>
+  <script src="modules/viewMenu.js"></script>
+  <script src="modules/queue.js"></script>
+  <script src="modules/inlineEdit.js"></script>
+  <script src="modules/tutorial.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

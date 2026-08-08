@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>MetaX</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--accent:#7c6af0;--accent-glow:rgba(124,106,240,0.3);--green:#4ade80;--green-glow:rgba(74,222,128,0.3);--red:#f87171;--red-glow:rgba(248,113,113,0.3);--amber:#fbbf24;--bg:rgba(14,14,22,0.96);--surface:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.06);--dim:#5a5a72;--text:#e8e8f0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;background:transparent;color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased;user-select:none}
+#splash{display:flex;align-items:center;justify-content:center;height:100vh;width:100vw;padding:24px}
+#card{background:var(--bg);border:1px solid var(--border);border-radius:24px;padding:36px 40px 32px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 25px 80px rgba(0,0,0,0.6);width:380px;position:relative;overflow:hidden}
+#card::before{content:'';position:absolute;top:-60%;left:-60%;width:220%;height:220%;background:conic-gradient(from 0deg,transparent,rgba(124,106,240,0.05),transparent,rgba(124,106,240,0.07),transparent);animation:spinGlow 8s linear infinite;pointer-events:none}
+@keyframes spinGlow{100%{transform:rotate(360deg)}}
+
+/* Logo */
+#logo-wrap{position:relative;margin-bottom:4px}
+#logo{font-size:42px;font-weight:800;letter-spacing:-0.5px;line-height:1;opacity:0;animation:logoFade 1s cubic-bezier(0.22,1,0.36,1) forwards;position:relative}
+@keyframes logoFade{0%{opacity:0;transform:translateY(-14px) scale(0.9);filter:blur(6px)}50%{filter:blur(0)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+#logo .base{color:var(--text)}
+#logo .x{color:#a78bfa}
+#logo .dot{color:var(--accent)}
+#logo-sub{font-size:9px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;font-weight:500;text-align:center;margin-top:2px;opacity:0;animation:fadeIn 0.5s ease 0.6s forwards}
+
+/* Progress */
+#prog-wrap{width:100%;margin-top:4px}
+#prog-track{width:100%;height:3px;background:var(--surface);border-radius:4px;overflow:hidden;position:relative}
+#prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#a78bfa);border-radius:4px;transition:width 0.5s cubic-bezier(0.22,1,0.36,1);box-shadow:0 0 10px var(--accent-glow)}
+#prog-label{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:5px}
+#prog-label span{transition:color 0.3s}
+
+/* Checks */
+#checks{width:100%;display:flex;flex-direction:column;gap:4px;position:relative;z-index:1}
+@keyframes fadeIn{to{opacity:1}}
+.check-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;font-size:13px;color:var(--dim);transition:all 0.35s cubic-bezier(0.22,1,0.36,1)}
+.check-row.active{color:var(--text);background:rgba(124,106,240,0.06)}
+.check-row.done{color:var(--green)}
+.check-row.fail{color:var(--red);background:rgba(248,113,113,0.06)}
+.check-row.installing{color:var(--amber);background:rgba(251,191,36,0.06)}
+
+/* SVG indicator */
+.ind{width:20px;height:20px;flex-shrink:0;position:relative}
+.ind svg{width:100%;height:100%;display:block}
+.ind-ring{fill:none;stroke:rgba(255,255,255,0.08);stroke-width:2.5}
+.ind-arc{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:0 100;transform-origin:10px 10px;transition:stroke 0.4s,stroke-dasharray 0.35s}
+.check-row.active .ind-arc{stroke-dasharray:26 74;animation:spinMe 0.6s linear infinite}
+@keyframes spinMe{to{transform:rotate(360deg)}}
+.check-row.done .ind-arc{stroke:var(--green);stroke-dasharray:0 0;animation:none}
+.check-row.fail .ind-arc{stroke:var(--red);stroke-dasharray:0 0;animation:none}
+.check-row.installing .ind-arc{stroke:var(--amber);stroke-dasharray:20 80;animation:spinMe 0.5s linear infinite}
+.ind-check,.ind-cross{opacity:0;transition:opacity 0.25s}
+.check-row.done .ind-check{opacity:1;stroke:var(--green);stroke-dasharray:18;stroke-dashoffset:0;animation:drawCheck 0.3s ease forwards}
+@keyframes drawCheck{from{stroke-dashoffset:18}to{stroke-dashoffset:0}}
+.check-row.fail .ind-cross{opacity:1;stroke:var(--red)}
+
+/* Label + status */
+.lbl{flex:1;font-weight:500;display:flex;flex-direction:column;gap:0;line-height:1.3}
+.lbl-main{display:block}
+.lbl-sub{display:none;font-size:10px;font-weight:400;color:var(--dim);margin-top:1px}
+.check-row.active .lbl-sub{display:block}
+.check-row.installing .lbl-sub{display:block;color:var(--amber)}
+.check-row.done .lbl-sub{display:none}
+
+/* Bottom section */
+#bottom{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:32px}
+#dots{display:flex;gap:4px;height:8px;align-items:center}
+#dots span{width:4px;height:4px;border-radius:50%;background:var(--dim);animation:bounceDot 1.2s ease-in-out infinite}
+#dots span:nth-child(2){animation-delay:0.15s}
+#dots span:nth-child(3){animation-delay:0.3s}
+#dots.hide{visibility:hidden}
+@keyframes bounceDot{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px);background:var(--accent)}}
+
+/* Success */
+#success-ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--green);opacity:0;animation:ringPop 0.5s ease 0.1s forwards;pointer-events:none}
+@keyframes ringPop{0%{transform:scale(0.3);opacity:0}50%{opacity:0.5}100%{transform:scale(2);opacity:0}}
+#success-icon{font-size:28px;color:var(--green);text-shadow:0 0 20px var(--green-glow);display:none;animation:popBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;position:relative}
+#success-icon.show{display:inline}
+@keyframes popBounce{0%{transform:scale(0) rotate(-20deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+#particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:0;z-index:0}
+#particles.show{opacity:1}
+.particle{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--green);animation:fly 1.2s ease-out forwards}
+@keyframes fly{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--x),var(--y)) scale(0);opacity:0}}
+
+/* Fail panel */
+#fail{display:none;flex-direction:column;align-items:center;gap:8px;width:100%}
+#fail.show{display:flex}
+#fail .icon{font-size:22px;color:var(--red);text-shadow:0 0 10px var(--red-glow);animation:shake 0.4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+#fail .detail{font-size:11px;text-align:center;line-height:1.4;font-family:"SF Mono","Fira Code",monospace;background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.12);border-radius:8px;padding:8px 12px;color:var(--red);word-break:break-all;width:100%}
+#fail button{margin-top:4px;padding:6px 22px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+#fail button:hover{filter:brightness(1.15);transform:translateY(-1px);box-shadow:0 4px 16px var(--accent-glow)}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div id="card">
+    <div id="logo-wrap"><div id="logo"><span class="base">Meta</span><span class="x">X</span><span class="dot">.</span></div><div id="logo-sub">Pre-flight Check</div></div>
+
+    <div id="prog-wrap">
+      <div id="prog-track"><div id="prog-fill"></div></div>
+      <div id="prog-label"><span id="prog-status">Initializing</span><span id="prog-count">0 / 4</span></div>
+    </div>
+
+    <div id="checks">
+      <div class="check-row" id="c-python">
+        <div class="ind"><svg viewBox="0 0 20 20"><circle class="ind-ring" cx="10" cy="10" r="8"/><circle class="ind-arc" cx="10" cy="10" r="8"/><path class="ind-check" d="M6 10l3 3 5-5" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path class="ind-cross" d="M6 6l8 8M14 6l-8 8" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="lbl"><span class="lbl-main">Python runtime</span><span class="lbl-sub">Checking... auto-installs if missing</span></div>
+      </div>
+      <div class="check-row" id="c-openpyxl">
+        <div class="ind"><svg viewBox="0 0 20 20"><circle class="ind-ring" cx="10" cy="10" r="8"/><circle class="ind-arc" cx="10" cy="10" r="8"/><path class="ind-check" d="M6 10l3 3 5-5" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path class="ind-cross" d="M6 6l8 8M14 6l-8 8" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="lbl"><span class="lbl-main">openpyxl library</span><span class="lbl-sub">Verifying spreadsheet support</span></div>
+      </div>
+      <div class="check-row" id="c-requests">
+        <div class="ind"><svg viewBox="0 0 20 20"><circle class="ind-ring" cx="10" cy="10" r="8"/><circle class="ind-arc" cx="10" cy="10" r="8"/><path class="ind-check" d="M6 10l3 3 5-5" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path class="ind-cross" d="M6 6l8 8M14 6l-8 8" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="lbl"><span class="lbl-main">requests library</span><span class="lbl-sub">Checking HTTP support</span></div>
+      </div>
+      <div class="check-row" id="c-config">
+        <div class="ind"><svg viewBox="0 0 20 20"><circle class="ind-ring" cx="10" cy="10" r="8"/><circle class="ind-arc" cx="10" cy="10" r="8"/><path class="ind-check" d="M6 10l3 3 5-5" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path class="ind-cross" d="M6 6l8 8M14 6l-8 8" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <div class="lbl"><span class="lbl-main">Configuration</span><span class="lbl-sub">Validating config file</span></div>
+      </div>
+    </div>
+
+    <div id="bottom">
+      <div id="dots"><span></span><span></span><span></span></div>
+      <div id="success-icon">&#10003;</div>
+      <div id="particles"></div>
+      <div id="fail"><div class="icon">&#10007;</div><p style="font-size:12px;color:var(--dim)">Something went wrong</p><div class="detail" id="fail-detail"></div><button onclick="closeSplash()">Close</button></div>
+    </div>
+  </div>
+</div>
+<script>
+var ORDER=["python","openpyxl","requests","config"];
+var ROWS={};
+ORDER.forEach(function(id){ROWS[id]=document.getElementById("c-"+id)});
+
+var LABELS={python:"Python runtime",openpyxl:"openpyxl library",requests:"requests library",config:"Configuration"};
+
+var progFill=document.getElementById("prog-fill"),progStatus=document.getElementById("prog-status"),progCount=document.getElementById("prog-count"),dots=document.getElementById("dots"),successIcon=document.getElementById("success-icon"),failPanel=document.getElementById("fail"),failDetail=document.getElementById("fail-detail"),particles=document.getElementById("particles"),currentIdx=-1;
+
+function setRow(id,state){
+  var el=ROWS[id];if(!el)return;
+  el.className="check-row "+state;
+}
+
+function advance(){
+  if(currentIdx>=0)setRow(ORDER[currentIdx],"done");
+  currentIdx++;
+  if(currentIdx>=ORDER.length){doneAll();return}
+  var id=ORDER[currentIdx];
+  setRow(id,"active");
+  progFill.style.width=((currentIdx+1)/ORDER.length*100)+"%";
+  progCount.textContent=(currentIdx+1)+" / "+ORDER.length;
+  progStatus.textContent=LABELS[id];
+}
+
+function doneAll(){
+  if(currentIdx>=0&&currentIdx<ORDER.length)setRow(ORDER[currentIdx],"done");
+  progFill.style.width="100%";
+  progCount.textContent=ORDER.length+" / "+ORDER.length;
+  progStatus.textContent="All checks passed";
+  dots.classList.add("hide");
+  successIcon.classList.add("show");
+  burst();
+}
+
+function burst(){
+  particles.classList.add("show");
+  for(var i=0;i<20;i++){
+    var p=document.createElement("div");p.className="particle";
+    var a=Math.random()*Math.PI*2,d=30+Math.random()*90;
+    p.style.setProperty("--x",Math.cos(a)*d+"px");p.style.setProperty("--y",Math.sin(a)*d+"px");
+    p.style.background=["#4ade80","#22c55e","#86efac","#bbf7d0","#16a34a"][i%5];
+    p.style.left="50%";p.style.top="50%";
+    particles.appendChild(p);
+  }
+  setTimeout(function(){particles.classList.remove("show");particles.innerHTML=""},1500);
+}
+
+function failCheck(detail,final){
+  dots.classList.add("hide");
+  if(currentIdx>=0&&currentIdx<ORDER.length)setRow(ORDER[currentIdx],"fail");
+  if(final){
+    progFill.style.background="linear-gradient(90deg,#f87171,#ef4444)";
+    progStatus.textContent="Check failed";
+    failDetail.textContent=detail;
+    failPanel.classList.add("show");
+  }else failDetail.textContent=detail;
+}
+
+function closeSplash(){if(window.splashAPI&&window.splashAPI.closeSplash)window.splashAPI.closeSplash()}
+
+window.splashAPI.onProgress(function(d){
+  if(d.type==="advance")advance();
+  else if(d.type==="fail"){if(d.recoverable){if(d.id)setRow(d.id,"fail")}else failCheck(d.detail,true)}
+  else if(d.type==="installing"){if(d.id)setRow(d.id,"installing")}
+  else if(d.type==="done"){if(d.id)setRow(d.id,"done")}
+  else if(d.type==="complete")doneAll();
+});
+
+// Fallback auto-advance if no IPC events arrive (3s timeout)
+setTimeout(function(){if(currentIdx<0)advance()},3000);
+</script>
+</body>
+</html>

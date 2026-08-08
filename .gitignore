@@ -1,0 +1,5 @@
+node_modules/
+dist/
+StubInstaller/
+__pycache__/
+*.pyc

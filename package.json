@@ -1,0 +1,96 @@
+{
+  "name": "metax",
+  "version": "4.0.0",
+  "description": "MetaX V4 — CSV generator with advanced workspace & tools",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder --win --x64",
+    "build:portable": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.amagi.metax.v4",
+    "productName": "MetaX V4",
+    "copyright": "© 2026 Aryan for Amagi's Creative Team",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!Updates/**",
+      "!StubInstaller/**",
+      "!python_libs/**"
+    ],
+    "asar": false,
+    "extraResources": [
+      {
+        "from": "engine.py",
+        "to": "engine.py"
+      },
+      {
+        "from": "../config.json",
+        "to": "config.json"
+      },
+      {
+        "from": "python_libs",
+        "to": "python_libs",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "icon": "icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "license": "eula.txt",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MetaX",
+      "installerSidebar": null,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "unicode": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "@aws-sdk/checksums": "^3.1000.16",
+    "@aws-sdk/client-s3": "^3.1081.0",
+    "@aws-sdk/core": "^3.975.1",
+    "@aws-sdk/credential-provider-env": "^3.972.57",
+    "@aws-sdk/credential-provider-http": "^3.972.59",
+    "@aws-sdk/credential-provider-ini": "^3.973.1",
+    "@aws-sdk/credential-provider-login": "^3.972.63",
+    "@aws-sdk/credential-provider-node": "^3.972.66",
+    "@aws-sdk/credential-provider-process": "^3.972.57",
+    "@aws-sdk/credential-provider-sso": "^3.973.1",
+    "@aws-sdk/credential-provider-web-identity": "^3.972.63",
+    "@aws-sdk/middleware-sdk-s3": "^3.972.62",
+    "@aws-sdk/nested-clients": "^3.997.31",
+    "@aws-sdk/signature-v4-multi-region": "^3.996.39",
+    "@aws-sdk/token-providers": "^3.1084.0",
+    "@aws-sdk/types": "^3.974.0",
+    "@aws-sdk/xml-builder": "^3.972.34",
+    "@smithy/core": "^3.29.2",
+    "@smithy/credential-provider-imds": "^4.4.7",
+    "@smithy/fetch-http-handler": "^5.6.4",
+    "@smithy/node-http-handler": "^4.9.4",
+    "@smithy/signature-v4": "^5.6.3",
+    "@smithy/types": "^4.16.0"
+  }
+}
