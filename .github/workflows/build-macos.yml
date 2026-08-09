@@ -28,38 +28,38 @@ jobs:
         run: |
           PARENT="$(dirname "$GITHUB_WORKSPACE")"
           cat > "$PARENT/config.json" <<'CONFIG_EOF'
-{
-  "sheet_url": "https://docs.google.com/spreadsheets/d/1yf8W7oDGmUlTMmRxDcgCTD8D-zHUH3lsYgZ5jVdaSXY/edit?gid=0#gid=0",
-  "extra_segments": 4,
-  "subsegments_per_segment": 2,
-  "csv_columns": [
-    "Asset ID",
-    "Title",
-    "description",
-    "long_description",
-    "series_title",
-    "series_tms_id",
-    "tags",
-    "categories",
-    "Video Filename",
-    "Segments",
-    "Language",
-    "season",
-    "episode"
-  ],
-  "update_repo": "TheOnly1000/MetaFy",
-  "s3": {
-    "s3_enabled": false,
-    "s3_type": "aws",
-    "s3_bucket": "",
-    "s3_region": "",
-    "s3_prefix": "",
-    "s3_endpoint": "",
-    "_access_key": "",
-    "_secret_key": ""
-  }
-}
-CONFIG_EOF
+          {
+            "sheet_url": "https://docs.google.com/spreadsheets/d/1yf8W7oDGmUlTMmRxDcgCTD8D-zHUH3lsYgZ5jVdaSXY/edit?gid=0#gid=0",
+            "extra_segments": 4,
+            "subsegments_per_segment": 2,
+            "csv_columns": [
+              "Asset ID",
+              "Title",
+              "description",
+              "long_description",
+              "series_title",
+              "series_tms_id",
+              "tags",
+              "categories",
+              "Video Filename",
+              "Segments",
+              "Language",
+              "season",
+              "episode"
+            ],
+            "update_repo": "TheOnly1000/MetaFy",
+            "s3": {
+              "s3_enabled": false,
+              "s3_type": "aws",
+              "s3_bucket": "",
+              "s3_region": "",
+              "s3_prefix": "",
+              "s3_endpoint": "",
+              "_access_key": "",
+              "_secret_key": ""
+            }
+          }
+          CONFIG_EOF
 
       - name: Build macOS installer (dmg + zip)
         env:
