@@ -65,22 +65,31 @@ function httpGet(url) {
 
 function downloadFile(url, dest, onProgress) {
   return new Promise((resolve, reject) => {
-    const driver = url.startsWith("https") ? https : http;
-    driver.get(url, { headers: { "User-Agent": "MetaX/2.0" } }, (res) => {
-      const total = parseInt(res.headers["content-length"], 10) || 0;
-      let received = 0;
-      const file = fs.createWriteStream(dest);
-      res.on("data", (chunk) => {
-        received += chunk.length;
-        file.write(chunk);
-        if (total && onProgress) onProgress(Math.round((received / total) * 100));
-      });
-      res.on("end", () => {
-        file.end();
-        resolve(dest);
-      });
-      res.on("error", (e) => { file.close(); fs.unlinkSync(dest); reject(e); });
-    }).on("error", reject);
+    const follow = (target, redirects) => {
+      if (redirects > 5) return reject(new Error("Too many redirects"));
+      const driver = target.startsWith("https") ? https : http;
+      driver.get(target, { headers: { "User-Agent": "MetaX/4.0.0" } }, (res) => {
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          res.resume();
+          return follow(new URL(res.headers.location, target).toString(), redirects + 1);
+        }
+        const total = parseInt(res.headers["content-length"], 10) || 0;
+        let received = 0;
+        const file = fs.createWriteStream(dest);
+        file.on("error", reject);
+        res.on("data", (chunk) => {
+          received += chunk.length;
+          file.write(chunk);
+          if (total && onProgress) onProgress(Math.round((received / total) * 100));
+        });
+        res.on("end", () => {
+          file.end();
+          resolve(dest);
+        });
+        res.on("error", (e) => { file.close(); fs.unlinkSync(dest); reject(e); });
+      }).on("error", reject);
+    };
+    follow(url, 0);
   });
 }
 
@@ -130,7 +139,7 @@ function decryptSecret(encoded) {
 
 async function uploadToS3(outputDir, s3Config) {
   if (!s3Config || !s3Config.s3_enabled || !s3Config.s3_bucket) {
-    return { success: false, error: "S3 not configured" };
+    return { success: false, error: "Bucket upload not configured" };
   }
 
   const secretKey = decryptSecret(s3Config._secret_key);
@@ -158,15 +167,32 @@ async function uploadToS3(outputDir, s3Config) {
   }
 
   const isMinio = s3Config.s3_type === "minio";
+  // Normalize endpoint: MinIO folks often paste the console URL (port 9001) or the
+  // /browser/<bucket> page which is NOT the S3 API endpoint. The API listens on a
+  // separate port (default 9000) and must be a bare http(s)://host:port.
+  let endpoint = (s3Config.s3_endpoint || (isMinio ? "http://localhost:9000" : undefined));
+  if (endpoint) {
+    endpoint = endpoint.trim().replace(/\/+$/, "");
+    const consoleHint = endpoint.match(/\/browser|:9001$/i);
+    if (consoleHint) {
+      return {
+        success: false,
+        error: "MinIO endpoint looks like the web console, not the S3 API endpoint. " +
+          "Use the API port (default 9000), e.g. http://localhost:9000 — not " +
+          endpoint + ".",
+        bucket: s3Config.s3_bucket,
+      };
+    }
+  }
   const client = new S3Client({
-    region: s3Config.s3_region || "us-east-1",
+    region: s3Config.s3_region || (isMinio ? "us-east-1" : "us-east-1"),
     credentials: {
       accessKeyId: accessKey,
       secretAccessKey: secretKey,
     },
     // MinIO (or any S3-compatible local store) needs a custom endpoint + path-style addressing
     ...(isMinio ? {
-      endpoint: s3Config.s3_endpoint || "http://localhost:9000",
+      endpoint,
       forcePathStyle: true,
     } : {}),
   });
@@ -189,7 +215,9 @@ async function uploadToS3(outputDir, s3Config) {
       }));
       results.uploaded.push(fileName);
     } catch (e) {
-      results.failed.push({ file: fileName, error: e.message });
+      // Surface the endpoint + bucket + raw reason so "upload failed" is actionable
+      const reason = (e && (e.message || e.name || String(e))) || "unknown error";
+      results.failed.push({ file: fileName, error: `[${isMinio ? endpoint : "S3"}] ${reason}` });
     }
   }
 
@@ -271,7 +299,11 @@ let embeddedPythonDir = null;
 
 async function ensureEmbeddedPython() {
   // Downloads Python's embeddable zip into userData and points pythonCmd at it.
-  // This lets the app run even when the machine has no Python at all.
+  // This lets the app run even when the machine has no Python at all (Windows-only:
+  // the embeddable zip ships a python.exe and is extracted with PowerShell).
+  if (process.platform !== "win32") {
+    throw new Error("No Python found on PATH. On this OS install Python 3 (macOS: xcode-select --install or python.org installer) and restart the app.");
+  }
   const ver = "3.12.8";
   const baseDir = path.join(app.getPath("userData"), "pykeep");
   const exe = path.join(baseDir, "python.exe");
@@ -429,6 +461,7 @@ async function runAllChecks() {
 let downloadedExePath = null;
 let pendingUpdateUrl = null;
 let pendingUpdateSha256 = null;
+let pendingUpdateAssetExt = ".exe";
 
 function httpGet(url) {
   return new Promise((resolve, reject) => {
@@ -445,8 +478,25 @@ function httpGet(url) {
   });
 }
 
-// Simple update channel: the repo's Releases page lists "MetaX-Setup-VERSION.exe".
-// If that release's version number is higher than the installed one, offer it.
+// Simple update channel: the repo's Releases page lists the platform installer
+// ("MetaX-Setup-VERSION.exe"/".msi" on Windows, ".dmg"/".zip" on macOS). If that
+// release's version number is higher than the installed one, offer it.
+function pickUpdateAsset(assets) {
+  const list = assets || [];
+  if (process.platform === "darwin") {
+    const dmg = list.filter((a) => /\.dmg$/i.test(a.name || ""));
+    const zip = list.filter((a) => /\.zip$/i.test(a.name || "") && !/\.dmg$/i.test(a.name || ""));
+    const asset = dmg[0] || zip[0];
+    if (!asset) throw new Error("No installer (dmg/zip) attached to the latest release");
+    return { asset, assetExt: /\.dmg$/i.test(asset.name || "") ? ".dmg" : ".zip" };
+  }
+  const exe = list.filter((a) => /\.exe$/i.test(a.name || ""));
+  const msi = list.filter((a) => /\.msi$/i.test(a.name || ""));
+  const asset = exe[0] || msi[0];
+  if (!asset) throw new Error("No installer (exe/msi) attached to the latest release");
+  return { asset, assetExt: /\.msi$/i.test(asset.name || "") ? ".msi" : ".exe" };
+}
+
 async function queryGitHubForUpdates(repo) {
   const apiUrl = `https://api.github.com/repos/${repo}/releases/latest`;
   const raw = await httpGet(apiUrl);
@@ -460,11 +510,11 @@ async function queryGitHubForUpdates(repo) {
   if (!verMatch) {
     throw new Error("Invalid release version tag: " + tag);
   }
-  const asset = (data.assets || []).find((a) => /\.(exe|msi)$/i.test(a.name || ""));
-  if (!asset) {
-    throw new Error("No installer (exe/msi) attached to the latest release");
-  }
-  return { versionName: tag, downloadUrl: asset.browser_download_url || asset.url, sha256: null };
+  const allowed = process.platform === "darwin"
+    ? (a) => /\.(dmg|zip)$/i.test(a.name || "")
+    : (a) => /\.(exe|msi)$/i.test(a.name || "");
+  const { asset, assetExt } = pickUpdateAsset((data.assets || []).filter(allowed));
+  return { versionName: tag, downloadUrl: asset.browser_download_url || asset.url, sha256: null, assetExt };
 }
 
 async function checkForUpdates() {
@@ -490,6 +540,8 @@ async function checkForUpdates() {
 
     pendingUpdateUrl = downloadUrl;
     pendingUpdateSha256 = sha256 || null;
+    const extMatch = downloadUrl.match(/\.(exe|msi|dmg|zip)(?:\?|$)/i);
+    pendingUpdateAssetExt = extMatch ? "." + extMatch[1].toLowerCase() : ".bin";
 
     return {
       currentVersion,
@@ -567,8 +619,101 @@ delete process.env.NODE_OPTIONS;
 
 // ── App lifecycle ──
 
+// Headless end-to-end self-test used by CI. Runs the real pre-flight checks,
+// then a genuine engine generation into a temp folder, verifying CSV output.
+// Prints SMOKE_OK / SMOKE_FAIL and exits with the corresponding code.
+function pad2(n) { return String(n).padStart(2, "0"); }
+
+async function runSmokeTest() {
+  const log = (...a) => console.log("[smoke]", ...a);
+  try {
+    await discoverPython();
+    const checksOk = await runAllChecks();
+    if (!checksOk) {
+      log("FAIL: pre-flight checks did not all pass");
+      console.log("SMOKE_FAIL checks");
+      app.exit(1);
+      return;
+    }
+
+    const tmpOut = path.join(app.getPath("temp"), "metax-smoke-" + Date.now());
+    fs.mkdirSync(tmpOut, { recursive: true });
+
+    // Try today, then yesterday, then 7 days back — a real date in the sheet.
+    const candidates = [];
+    for (let i = 0; i < 3; i++) {
+      const d = new Date();
+      if (i === 2) d.setDate(d.getDate() - 7);
+      else d.setDate(d.getDate() - i);
+      candidates.push(d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()));
+    }
+
+    let csvFiles = [];
+    let ran = false;
+    for (const date of candidates) {
+      log("generating for", date, "->", tmpOut);
+      const child = startEngineProcess({ date, outputDir: tmpOut, extraSegments: 4, subSegments: 2 }, (evt) => {
+        const msg = evt.type === "step"
+          ? "[step " + (evt.data || {}).status + "] " + ((evt.data || {}).message || "")
+          : evt.type === "log" ? evt.data
+          : evt.type + " " + JSON.stringify(evt.data || "").slice(0, 300);
+        log(msg);
+      });
+      if (child && child.error) {
+        log("FAIL:", child.error);
+        console.log("SMOKE_FAIL " + child.error);
+        app.exit(1);
+        return;
+      }
+      const exitCode = await new Promise((resolve) => {
+        child.on("close", resolve);
+        child.on("error", (e) => resolve(-1));
+      });
+      ran = true;
+      if (exitCode !== 0) {
+        log("FAIL: engine exit code", exitCode);
+        console.log("SMOKE_FAIL exit=" + exitCode);
+        app.exit(1);
+        return;
+      }
+      csvFiles = [];
+      const walk = (d) => {
+        for (const f of fs.readdirSync(d)) {
+          const p = path.join(d, f);
+          if (fs.statSync(p).isDirectory()) walk(p);
+          else if (/\.csv$/i.test(f)) csvFiles.push(p);
+        }
+      };
+      try { walk(tmpOut); } catch (_) {}
+      log("CSV files after run:", csvFiles.length);
+      if (csvFiles.length > 0) break;
+      log("no rows for", date, "- trying an earlier date");
+    }
+
+    if (!ran) { log("FAIL: engine never ran"); console.log("SMOKE_FAIL norun"); app.exit(1); return; }
+    if (csvFiles.length === 0) {
+      log("FAIL: no CSV output generated (schedule may be empty for the sample dates)");
+      console.log("SMOKE_FAIL no-csv");
+      app.exit(1);
+      return;
+    }
+
+    log("OK: checks passed, engine exited 0, wrote", csvFiles.length, "CSV(s) under", tmpOut);
+    console.log("SMOKE_OK csv=" + csvFiles.length);
+    app.exit(0);
+  } catch (e) {
+    log("FAIL:", e && e.stack ? e.stack : e);
+    console.log("SMOKE_FAIL " + (e && e.message ? e.message : e));
+    app.exit(1);
+  }
+}
+
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
+
+  if (process.argv.includes("--smoke-test")) {
+    return runSmokeTest();
+  }
 
   await new Promise((resolve) => {
     createSplash();
@@ -643,29 +788,17 @@ ipcMain.handle("open-path", async (event, p) => {
 // Engine spawn lock — prevents concurrent runs (even from compromised renderer)
 let engineRunning = false;
 
-ipcMain.handle("run-engine", async (event, { date, outputDir, extraSegments, subSegments }) => {
-  if (!mainWindow) return;
-  if (engineRunning) {
-    mainWindow.webContents.send("engine-event", { type: "error", data: "Engine already running" });
-    return;
-  }
-  engineRunning = true;
+// Shared engine process spawner. Parses JSON lines and forwards them to onEvent().
+// Returns the child process, or { error } if the input fails validation.
+function startEngineProcess({ date, outputDir, extraSegments, subSegments }, onEvent) {
   const enginePath = resPath("engine.py");
 
   // Validate date strictly: YYYY-MM-DD only
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    engineRunning = false;
-    mainWindow.webContents.send("engine-event", { type: "error", data: "Invalid date format" });
-    return;
-  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Invalid date format" };
 
   // Resolve and normalize outputDir to prevent path traversal
   const resolvedDir = path.resolve(outputDir);
-  if (!resolvedDir || resolvedDir.length < 3) {
-    engineRunning = false;
-    mainWindow.webContents.send("engine-event", { type: "error", data: "Invalid output directory" });
-    return;
-  }
+  if (!resolvedDir || resolvedDir.length < 3) return { error: "Invalid output directory" };
 
   const child = spawn(pythonCmd, [
     enginePath, "--date", date, "--output-dir", resolvedDir,
@@ -692,26 +825,50 @@ ipcMain.handle("run-engine", async (event, { date, outputDir, extraSegments, sub
         if (parsed.type === "done" && parsed.data && parsed.data.output_dir) {
           lastEngineOutputDir = parsed.data.output_dir;
         }
-        mainWindow.webContents.send("engine-event", parsed);
+        onEvent(parsed);
       } catch {
-        mainWindow.webContents.send("engine-event", { type: "log", data: line });
+        onEvent({ type: "log", data: line });
       }
     }
   });
 
   child.stderr.on("data", (data) => {
-    mainWindow.webContents.send("engine-event", {
-      type: "log",
-      data: "[stderr] " + data.toString(),
-    });
+    onEvent({ type: "log", data: "[stderr] " + data.toString() });
+  });
+
+  return child;
+}
+
+ipcMain.handle("run-engine", async (event, { date, outputDir, extraSegments, subSegments }) => {
+  if (!mainWindow) return;
+  if (engineRunning) {
+    mainWindow.webContents.send("engine-event", { type: "error", data: "Engine already running" });
+    return;
+  }
+  engineRunning = true;
+
+  const child = startEngineProcess({ date, outputDir, extraSegments, subSegments }, (evt) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send("engine-event", evt);
+  });
+
+  if (child && child.error) {
+    engineRunning = false;
+    mainWindow.webContents.send("engine-event", { type: "error", data: child.error });
+    return;
+  }
+
+  child.on("error", (e) => {
+    engineRunning = false;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("engine-event", { type: "error", data: "Engine failed to start: " + e.message });
+    }
   });
 
   child.on("close", (code) => {
     engineRunning = false;
-    mainWindow.webContents.send("engine-event", {
-      type: "exit",
-      data: { code },
-    });
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("engine-event", { type: "exit", data: { code } });
+    }
   });
 });
 
@@ -846,7 +1003,7 @@ ipcMain.handle("download-update", async () => {
   if (!pendingUpdateUrl) return { error: "No update URL available. Check for updates first." };
   try {
     const tmpDir = app.getPath("temp");
-    const dest = path.join(tmpDir, "MetaX-Update.exe");
+    const dest = path.join(tmpDir, "MetaX-Update" + (pendingUpdateAssetExt || ".exe"));
     downloadedExePath = dest;
 
     await downloadFile(pendingUpdateUrl, dest, (pct) => {
@@ -877,18 +1034,125 @@ ipcMain.handle("download-update", async () => {
   }
 });
 
+function execFileAsync(cmd, args) {
+  return new Promise((resolve) => {
+    const { execFile } = require("child_process");
+    execFile(cmd, args, { maxBuffer: 64 * 1024 * 1024 }, (err, stdout, stderr) => {
+      resolve({ err, stdout: String(stdout), stderr: String(stderr) });
+    });
+  });
+}
+
+function findAppDir(dir) {
+  const stack = [dir];
+  while (stack.length) {
+    const cur = stack.pop();
+    let entries = [];
+    try { entries = fs.readdirSync(cur, { withFileTypes: true }); } catch (_) { continue; }
+    for (const e of entries) {
+      const full = path.join(cur, e.name);
+      if (e.name.toLowerCase().endsWith(".app")) return full;
+      if (e.isDirectory()) stack.push(full);
+    }
+  }
+  return null;
+}
+
+function installMacApp(appSrc) {
+  const destRoot = "/Applications";
+  const dest = path.join(destRoot, path.basename(appSrc));
+  if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
+  fs.cpSync(appSrc, dest, { recursive: true });
+  return dest;
+}
+
+function relaunchMacApp() {
+  // Detached shell survives app.quit() and reopens the newly installed app.
+  try {
+    spawn("/bin/sh", ["-c", "sleep 3; open -a 'MetaX V4'"], { detached: true, stdio: "ignore" }).unref();
+  } catch (e) { /* best-effort */ }
+}
+
+async function applyUpdateMac(pkgPath) {
+  const ext = path.extname(pkgPath).toLowerCase();
+
+  // Mount (dmg) or extract (zip) and locate the .app bundle inside.
+  let baseDir = null;
+  let detachTarget = null;
+  if (ext === ".dmg") {
+    const mount = await execFileAsync("/usr/bin/hdiutil", ["attach", "-nobrowse", "-plist", pkgPath]);
+    if (mount.err) return { error: "Unable to mount DMG: " + mount.err.message };
+    const m = String(mount.stdout).match(/<key>mount-point<\/key>\s*<string>([^<]+)<\/string>/);
+    if (!m) return { error: "Could not locate the DMG mount point" };
+    baseDir = m[1].trim();
+    detachTarget = baseDir;
+  } else if (ext === ".zip") {
+    const staging = path.join(app.getPath("temp"), "metax-update-" + Date.now());
+    fs.mkdirSync(staging, { recursive: true });
+    const unzip = await execFileAsync("/usr/bin/ditto", ["-x", "-k", pkgPath, staging]);
+    if (unzip.err) return { error: "Unable to extract update: " + unzip.err.message };
+    baseDir = staging;
+  } else {
+    return { error: "Unsupported installer type on macOS: " + ext };
+  }
+
+  const appSrc = findAppDir(baseDir);
+  if (!appSrc) {
+    if (detachTarget) await execFileAsync("/usr/bin/hdiutil", ["detach", detachTarget, "-quiet"]);
+    return { error: "No .app bundle found in the update package" };
+  }
+
+  try {
+    installMacApp(appSrc);
+  } catch (e) {
+    if (detachTarget) await execFileAsync("/usr/bin/hdiutil", ["detach", detachTarget, "-quiet"]);
+    return { error: "Could not install to /Applications: " + e.message };
+  }
+  if (detachTarget) await execFileAsync("/usr/bin/hdiutil", ["detach", detachTarget, "-quiet"]);
+  relaunchMacApp();
+  return { success: true };
+}
+
 ipcMain.handle("apply-update", async () => {
   if (!downloadedExePath || !fs.existsSync(downloadedExePath)) {
     return { error: "No downloaded update found" };
   }
 
   try {
-    // Simply launch the downloaded installer/app and quit — the release exe does the rest.
-    spawn(downloadedExePath, [], {
-      detached: true,
-      stdio: "ignore",
-      windowsHide: true,
-    }).unref();
+    if (process.platform === "darwin") {
+      const mac = await applyUpdateMac(downloadedExePath);
+      if (mac && mac.error) return mac;
+      app.quit();
+      return { success: true };
+    }
+    const isMsi = /\.msi$/i.test(downloadedExePath);
+    if (isMsi) {
+      // MSI: install quietly via msiexec
+      spawn("msiexec.exe", ["/i", downloadedExePath, "/qn", "/norestart"], {
+        detached: true,
+        stdio: "ignore",
+        windowsHide: true,
+      }).unref();
+    } else {
+      // NSIS: silent install to the same directory; electron-builder writes
+      // %LOCALAPPDATA%\Programs\<productName>\<exe>. Relaunch the app afterwards.
+      const installDir = path.join(process.env.LOCALAPPDATA || path.join(app.getPath("userData"), "..", "Programs"), "Programs", "MetaX V4");
+      const appExe = path.join(installDir, "MetaX V4.exe");
+      spawn(downloadedExePath, ["/S"], {
+        detached: true,
+        stdio: "ignore",
+        windowsHide: true,
+      }).unref();
+
+      // Wait for the old process to exit and the installer to finish, then relaunch
+      setTimeout(() => {
+        try {
+          if (fs.existsSync(appExe)) {
+            spawn(appExe, [], { detached: true, stdio: "ignore" }).unref();
+          }
+        } catch (e) { /* best-effort relaunch */ }
+      }, 6000);
+    }
     app.quit();
     return { success: true };
   } catch (e) {

@@ -7,7 +7,8 @@
     "start": "electron .",
     "dev": "electron . --dev",
     "build": "electron-builder --win --x64",
-    "build:portable": "electron-builder --win portable"
+    "build:portable": "electron-builder --win portable",
+    "build:mac": "electron-builder --mac"
   },
   "build": {
     "appId": "com.amagi.metax.v4",
@@ -47,8 +48,24 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "msi",
+          "arch": [
+            "x64"
+          ]
         }
       ]
+    },
+    "mac": {
+      "icon": "icon.png",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.video",
+      "hardenedRuntime": false,
+      "identity": null
     },
     "nsis": {
       "oneClick": false,

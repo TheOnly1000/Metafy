@@ -403,7 +403,7 @@
       </div>
       <div class="modal-body" id="settings-body">
         <div class="settings-section">
-          <div class="settings-section-title">S3 / MinIO Auto-Upload</div>
+          <div class="settings-section-title">Cloud Bucket Auto-Upload</div>
           <p class="settings-desc">When enabled, generated CSV files are automatically uploaded to your bucket after each successful generation. Pick Amazon S3 or a local MinIO server.</p>
           <label class="settings-toggle">
             <input type="checkbox" id="s3-enabled" />
@@ -421,6 +421,7 @@
             <div class="settings-field" id="s3-endpoint-field">
               <label for="s3-endpoint">MinIO Endpoint</label>
               <input type="text" id="s3-endpoint" placeholder="http://localhost:9000" spellcheck="false" />
+              <p class="settings-hint">Use the S3 <b>API</b> port (default 9000) — not the web console port 9001.</p>
             </div>
             <div class="settings-field" id="s3-region-field">
               <label for="s3-region">Region</label>
@@ -432,7 +433,8 @@
             </div>
             <div class="settings-field">
               <label for="s3-prefix">Path inside bucket (optional)</label>
-              <input type="text" id="s3-prefix" placeholder="metax/output/" spellcheck="false" />
+              <input type="text" id="s3-prefix" placeholder="folder/output/" spellcheck="false" />
+              <p class="settings-hint">Just a folder prefix like <code>metax/output/</code> — not a URL.</p>
             </div>
             <div class="settings-field">
               <label for="s3-access-key">Access Key ID <span class="secret-badge">encrypted</span></label>
@@ -508,7 +510,7 @@
         <div class="shortcut-row"><span class="key-label">Shortcuts</span><span class="key-combo">Ctrl+/</span></div>
         <div class="shortcut-row"><span class="key-label">Settings</span><span class="key-combo">Ctrl+,</span></div>
         <div class="shortcut-row"><span class="key-label">Interactive Tutorial</span><span class="key-combo">Ctrl+Shift+T</span></div>
-        <div class="shortcut-row"><span class="key-label">Toggle S3 Auto-Push</span><span class="key-combo">(in Settings)</span></div>
+        <div class="shortcut-row"><span class="key-label">Auto-Push to Bucket</span><span class="key-combo">(in Settings)</span></div>
       </div>
       <div class="shortcut-group">
         <div class="shortcut-group-title">Tabs</div>

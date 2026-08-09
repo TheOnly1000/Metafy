@@ -1,0 +1,93 @@
+name: Build macOS installer
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  mac-build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Stage parent config.json (packaged as resources/config.json)
+        run: |
+          PARENT="$(dirname "$GITHUB_WORKSPACE")"
+          cat > "$PARENT/config.json" <<'CONFIG_EOF'
+{
+  "sheet_url": "https://docs.google.com/spreadsheets/d/1yf8W7oDGmUlTMmRxDcgCTD8D-zHUH3lsYgZ5jVdaSXY/edit?gid=0#gid=0",
+  "extra_segments": 4,
+  "subsegments_per_segment": 2,
+  "csv_columns": [
+    "Asset ID",
+    "Title",
+    "description",
+    "long_description",
+    "series_title",
+    "series_tms_id",
+    "tags",
+    "categories",
+    "Video Filename",
+    "Segments",
+    "Language",
+    "season",
+    "episode"
+  ],
+  "update_repo": "TheOnly1000/MetaFy",
+  "s3": {
+    "s3_enabled": false,
+    "s3_type": "aws",
+    "s3_bucket": "",
+    "s3_region": "",
+    "s3_prefix": "",
+    "s3_endpoint": "",
+    "_access_key": "",
+    "_secret_key": ""
+  }
+}
+CONFIG_EOF
+
+      - name: Build macOS installer (dmg + zip)
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --mac
+
+      - name: Smoke test the packaged app
+        shell: bash
+        run: |
+          APP=""
+          for candidate in \
+            "dist/mac-arm64/MetaX V4.app/Contents/MacOS/MetaX V4" \
+            "dist/mac/MetaX V4.app/Contents/MacOS/MetaX V4" ; do
+            if [ -f "$candidate" ]; then APP="$candidate"; break; fi
+          done
+          if [ -z "$APP" ]; then
+            echo "App binary not found in dist/"
+            ls -la dist/ || true
+            exit 1
+          fi
+          echo "Running smoke test on: $APP"
+          "$APP" --smoke-test
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: MetaX-V4-mac
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: error

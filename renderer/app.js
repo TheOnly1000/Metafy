@@ -1065,7 +1065,7 @@
         if (ok) {
           settingsModal.classList.add("hidden");
           if (window.MetaX && window.MetaX.toast) {
-            window.MetaX.toast.success(data.s3_enabled ? "S3 auto-push enabled" : "Settings saved");
+            window.MetaX.toast.success(data.s3_enabled ? "Auto-push to bucket enabled" : "Settings saved");
           }
         } else {
           if (window.MetaX && window.MetaX.toast) window.MetaX.toast.error("Failed to save settings");
@@ -1084,24 +1084,24 @@
     s3Uploading = true;
 
     if (window.MetaX && window.MetaX.toast) {
-      window.MetaX.toast.info("Checking S3 auto-push...", 0);
+      window.MetaX.toast.info("Uploading to bucket...", 0);
     }
 
     window.electronAPI.triggerS3Upload().then(function (result) {
       s3Uploading = false;
-      if (!result || result._skipped) return; // S3 not enabled — silent
+      if (!result || result._skipped) return; // Bucket not enabled — silent
       if (result.success) {
         if (window.MetaX && window.MetaX.toast) {
-          window.MetaX.toast.success("S3: " + result.uploaded + " file(s) uploaded to " + result.bucket + "/" + (result.prefix || ""));
+          window.MetaX.toast.success("Uploaded " + result.uploaded + " file(s) to bucket " + result.bucket + "/" + (result.prefix || ""));
         }
       } else {
         if (window.MetaX && window.MetaX.toast) {
-          window.MetaX.toast.error("S3 upload: " + (result.error || "failed"));
+          window.MetaX.toast.error("Upload to bucket: " + (result.error || "failed"));
         }
       }
     }).catch(function (e) {
       s3Uploading = false;
-      if (window.MetaX && window.MetaX.toast) window.MetaX.toast.error("S3 upload error: " + e.message);
+      if (window.MetaX && window.MetaX.toast) window.MetaX.toast.error("Bucket upload error: " + e.message);
     });
   }
 
